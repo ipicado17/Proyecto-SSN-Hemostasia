@@ -1,0 +1,5 @@
+class Wound {
+    constructor() {
+        
+    }
+}

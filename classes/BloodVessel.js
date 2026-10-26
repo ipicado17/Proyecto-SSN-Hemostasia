@@ -14,6 +14,14 @@ class BloodVessel {
 
         this.endothelialCells = [];
         this.generateEndothelialCells();
+
+        // Atributos para el flowfield
+        this.rows;
+        this.cols;
+        this.size = 30;
+        this.defaultMag = 3;
+        this.flowfield = [];
+        this.generateFlowField();
     }
 
     generateEndothelialCells() {
@@ -54,8 +62,82 @@ class BloodVessel {
         }
     }
 
+    generateFlowField() {
+        // Separación entre el flowfield y las células endoteliales
+        const gap = 25;
+        
+        // Escala para el noise de los vectores
+        const noiseScale = 0.6;
+
+        // Promedio de posiciones en y para bottom y para top
+        let avgTop = this.topBoundary.reduce((sum, y) => sum + y, 0) / 
+                     this.topBoundary.length;
+        let avgBot = this.bottomBoundary.reduce((sum, y) => sum + y, 0) / 
+                     this.bottomBoundary.length;
+
+        let numberRows = avgBot - avgTop - 2 * gap;
+
+        this.rows = floor(numberRows / this.size);
+        this.cols = floor(width / this.size);
+
+        for (let i = 0; i < this.rows; i++) {
+            this.flowfield[i] = [];
+            for (let j = 0; j < this.cols; j++) {
+                const value = noise(j * noiseScale, i * noiseScale);
+                const angle = map(value, 0, 1, -PI / 3, PI / 3);
+
+                let v = p5.Vector.fromAngle(angle);
+                v.setMag(this.defaultMag);
+
+                this.flowfield[i][j] = v;
+            }
+        }
+    }
+
+    getVector(x, y) {
+        return this.flowfield[floor(x % this.rows)][floor(y % this.cols)];
+    }
+
+    displayFlowField() {
+        const gap = 25;
+        let startY = this.topBoundary[0] + gap;
+
+        for (let i = 0; i < this.rows; i++) {
+            for (let j = 0; j < this.cols; j++) {
+                let x = j * this.size;
+                let y = startY + i * this.size;
+
+                // ** Dibujar la celda **
+                noFill();
+                stroke(0, 255, 0);
+                strokeWeight(0.5);
+                rect(x, y, this.size, this.size);
+
+                // ** Obtener el vector del flowfield **
+                let v = this.flowfield[i][j];
+
+                push();
+
+                // Trasladar al centro de la celda
+                translate(x + this.size / 2, y + this.size / 2);
+
+                // Girar según la dirección del vector
+                rotate(v.heading());
+
+                // Dibujar la flecha
+                stroke(255, 255, 0);
+                strokeWeight(2);
+                line(-v.mag(), 0, v.mag(), 0);
+
+                pop();
+            }
+        }
+    }
+
     display() {
         this.body.display();
+
+        //this.displayFlowField();
 
         //dibujar las células endoteliales
         for (const cell of this.endothelialCells) {

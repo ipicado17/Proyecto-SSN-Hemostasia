@@ -19,7 +19,7 @@ class BloodVessel {
         this.rows;
         this.cols;
         this.size = 30;
-        this.defaultMag = 3;
+        this.defaultMag = 5;
         this.flowfield = [];
         this.generateFlowField();
     }

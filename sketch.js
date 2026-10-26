@@ -9,6 +9,11 @@ function setup() {
 function draw() {
     background(240);
 
+    // Generar una célula cada 30 frames
+    if (frameCount % 30 === 0) {
+        skin.addCell(random(100, 150));
+    }
+    skin.update();
     skin.display();
 }
 

@@ -6,6 +6,10 @@ class Skin {
         //semilla de ruido para variaciones en la piel
         this.seed = seed;
 
+        // Control del conjunto de celulas del vaso
+        this.dragCoefficient = 0.05;
+        this.cells = [];
+
         this.generate();
     }
 
@@ -76,5 +80,28 @@ class Skin {
         this.dermis.display();
         this.hypodermis.display();
         this.vessel.display();
+        for (let cell of this.cells) {
+            cell.display();
+        }
+    }
+
+    addCell(mass) {
+        this.cells.push(Cell.createRandomCell(
+            mass, this.vessel.topBoundary, this.vessel.bottomBoundary)
+        );
+    }
+
+    update() {
+        for (let c of this.cells) {
+            if (!c.isDead() && !c.isOutsideVessel()) {
+                let force = this.vessel.getVector(c.pos.x, c.pos.y);
+                c.addForce(force);
+                c.applyDrag(this.dragCoefficient);
+            }
+            c.update();
+            if (c.isDead()) {
+                this.cells.splice(this.cells.indexOf(c), 1);
+            }
+        }
     }
 }

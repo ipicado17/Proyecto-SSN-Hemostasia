@@ -1,0 +1,5 @@
+class Fibrin {
+    constructor() {
+        
+    }
+}

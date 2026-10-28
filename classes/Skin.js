@@ -86,9 +86,17 @@ class Skin {
     }
 
     addCell(mass) {
-        this.cells.push(Cell.createRandomCell(
-            mass, this.vessel.topBoundary, this.vessel.bottomBoundary)
-        );
+        this.cells.push(RedBloodCell.createRandomCell(
+            mass,
+            this.vessel.topBoundary,
+            this.vessel.bottomBoundary
+        ));
+
+        this.cells.push(Platelet.createRandomCell(
+            mass,
+            this.vessel.topBoundary,
+            this.vessel.bottomBoundary
+        ));
     }
 
     update() {

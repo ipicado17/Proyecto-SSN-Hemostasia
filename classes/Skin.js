@@ -111,5 +111,6 @@ class Skin {
                 this.cells.splice(this.cells.indexOf(c), 1);
             }
         }
+        this.vessel.updateFlowField();
     }
 }

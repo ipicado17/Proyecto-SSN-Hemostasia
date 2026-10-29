@@ -16,10 +16,18 @@ class BloodVessel {
         this.generateEndothelialCells();
 
         // Atributos para el flowfield
+        // Atributos de noise
+        this.noiseX = 0.6;
+        this.noiseY = 0.6;
+        this.noiseZ = 0.6;
+        this.noiseChange = 0.01;
+
+        // Atributos de la matriz
         this.rows;
         this.cols;
-        this.size = 30;
-        this.defaultMag = 5;
+        this.gap = 25;
+        this.size = 50;
+        this.defaultMag = 30;
         this.flowfield = [];
         this.generateFlowField();
     }
@@ -63,19 +71,13 @@ class BloodVessel {
     }
 
     generateFlowField() {
-        // Separación entre el flowfield y las células endoteliales
-        const gap = 25;
-        
-        // Escala para el noise de los vectores
-        const noiseScale = 0.6;
-
         // Promedio de posiciones en y para bottom y para top
         let avgTop = this.topBoundary.reduce((sum, y) => sum + y, 0) / 
                      this.topBoundary.length;
         let avgBot = this.bottomBoundary.reduce((sum, y) => sum + y, 0) / 
                      this.bottomBoundary.length;
 
-        let numberRows = avgBot - avgTop - 2 * gap;
+        let numberRows = avgBot - avgTop - 2 * this.gap;
 
         this.rows = floor(numberRows / this.size);
         this.cols = floor(width / this.size);
@@ -83,8 +85,16 @@ class BloodVessel {
         for (let i = 0; i < this.rows; i++) {
             this.flowfield[i] = [];
             for (let j = 0; j < this.cols; j++) {
-                const value = noise(j * noiseScale, i * noiseScale);
-                const angle = map(value, 0, 1, -PI / 3, PI / 3);
+                this.flowfield[i][j] = createVector(0, 0, 0);
+            }
+        }
+    }
+
+    updateFlowField() {
+        for (let i = 0; i < this.rows; i++) {
+            for (let j = 0; j < this.cols; j++) {
+                let value = noise(j * this.noiseX, i * this.noiseY, this.noiseZ);
+                let angle = map(value, 0, 1, -PI / 3, PI / 3);
 
                 let v = p5.Vector.fromAngle(angle);
                 v.setMag(this.defaultMag);
@@ -92,10 +102,18 @@ class BloodVessel {
                 this.flowfield[i][j] = v;
             }
         }
+        this.noiseZ += this.noiseChange;
     }
 
     getVector(x, y) {
-        return this.flowfield[floor(x % this.rows)][floor(y % this.cols)];
+        const col = floor(x / this.size);
+
+        // Acceso a y desde x, por las peredes irregulares del vaso
+        const vesselY = this.topBoundary[constrain(round(x), 0, this.topBoundary.length - 1)];
+        const row = floor((y - vesselY - this.gap) / this.size);
+
+        // Los constrain evitan que el índice se salga del arreglo y agarre el más cercano
+        return this.flowfield[constrain(row, 0, this.rows - 1)][constrain(col, 0, this.cols - 1)];
     }
 
     displayFlowField() {

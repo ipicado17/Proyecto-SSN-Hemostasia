@@ -7,7 +7,7 @@ class Cell {
         this.ang = random(-PI / 3, PI / 3);
         this.r = sqrt(this.mass / PI);
         this.c = color("#E53945");
-        this.massLoss = 0.8;
+        this.massLoss = 1;
         this.borderDamp = 0.8;
         this.maxSpeed = 2; 
 
@@ -18,18 +18,11 @@ class Cell {
         this.botVessel = botVessel;       
     }
 
-    static createRandomCell(mass, topVessel, botVessel) {
-        let x = 5;
-        let y = random(topVessel[0] + 10, botVessel[0] - 10);
+    static createRandomCell(mass, topVessel, botVessel) {}
 
-        let cell = new Cell(x, y, mass, topVessel, botVessel);
+    display(){}
 
-        let force = p5.Vector.fromAngle(cell.ang);
-        force.setMag(100);
-        cell.addForce(force);
-
-        return cell;
-    }
+    borders() {}
 
     update(){
         this.vel.add(this.acc);
@@ -44,26 +37,6 @@ class Cell {
             this.r = sqrt(this.mass / PI);
         }
 
-    }
-
-    display(){
-        noStroke();
-        fill(this.c);
-        ellipse(this.pos.x, this.pos.y, this.r * 2);
-    }
-
-    borders() {
-        // Las paredes verticales siguen la forma del vaso en cada x.
-        let index = Math.round(constrain(this.pos.x, 0, this.topVessel.length - 1));
-        let endothelialGap = 10;
-        let minY = this.topVessel[index] + this.r + endothelialGap;
-        let maxY = this.botVessel[index] - this.r - endothelialGap;
-
-        if (this.pos.y < minY)
-            this.vel.y *= -this.borderDamp;
-        if (this.pos.y > maxY)
-            this.vel.y *= -this.borderDamp;
-        this.pos.y = constrain(this.pos.y, minY, maxY);
     }
 
     addForce(f){

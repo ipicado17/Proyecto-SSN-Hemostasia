@@ -79,7 +79,7 @@ class BloodVessel {
 
         let numberRows = avgBot - avgTop - 2 * this.gap;
 
-        this.rows = floor(numberRows / this.size);
+        this.rows = floor(numberRows / this.size) + 1;
         this.cols = floor(width / this.size);
 
         for (let i = 0; i < this.rows; i++) {
@@ -94,7 +94,7 @@ class BloodVessel {
         for (let i = 0; i < this.rows; i++) {
             for (let j = 0; j < this.cols; j++) {
                 let value = noise(j * this.noiseX, i * this.noiseY, this.noiseZ);
-                let angle = map(value, 0, 1, -PI / 3, PI / 3);
+                let angle = map(value, 0, 1, -PI / 4, PI / 3);
 
                 let v = p5.Vector.fromAngle(angle);
                 v.setMag(this.defaultMag);

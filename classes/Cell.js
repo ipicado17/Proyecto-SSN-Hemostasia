@@ -20,6 +20,7 @@ class Cell {
         //atributos para que las celulas sepan donde está la herida
         this.woundStart = null;
         this.woundEnd = null;
+        this.woundEntranceY = null;
     }
 
     static createRandomCell(mass, topVessel, botVessel) { }
@@ -62,12 +63,14 @@ class Cell {
 
     isOutsideVessel() {
         let maxX = Math.min(this.topVessel.length, this.botVessel.length) - 1;
-        return this.pos.x < 0 || this.pos.x > maxX;
+        let escapedThroughWound = this.woundStart !== null && this.pos.y < -this.r;
+        return (this.pos.x < 0 || this.pos.x > maxX || escapedThroughWound);
     }
 
-    setWound(start, end) {
+    setWound(start, end, entranceY) {
         this.woundStart = start;
         this.woundEnd = end;
+        this.woundEntranceY = entranceY;
     }
 
     isUnderWound() {
@@ -76,5 +79,30 @@ class Cell {
             this.pos.x >= this.woundStart &&
             this.pos.x <= this.woundEnd
         );
+    }
+
+    isInsideWoundChannel() {
+        return (
+            this.woundEntranceY !== null &&
+            this.pos.y < this.woundEntranceY
+        );
+    }
+
+    woundBorders() {
+        if (!this.isInsideWoundChannel()) {
+            return;
+        }
+
+        // Pared izquierda de la herida
+        if (this.pos.x - this.r < this.woundStart) {
+            this.pos.x = this.woundStart + this.r;
+            this.vel.x = abs(this.vel.x) * this.borderDamp;
+        }
+
+        // Pared derecha de la herida
+        if (this.pos.x + this.r > this.woundEnd) {
+            this.pos.x = this.woundEnd - this.r;
+            this.vel.x = -abs(this.vel.x) * this.borderDamp;
+        }
     }
 }

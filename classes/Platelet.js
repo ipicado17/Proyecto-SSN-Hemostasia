@@ -32,6 +32,7 @@ class Platelet extends Cell {
     }
 
     borders() {
+        this.woundBorders();
         // Las paredes verticales siguen la forma del vaso en cada x.
         let index = Math.round(constrain(this.pos.x, 0, this.topVessel.length - 1));
         let endothelialGap = 16;

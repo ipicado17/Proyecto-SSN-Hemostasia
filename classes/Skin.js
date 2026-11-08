@@ -13,6 +13,7 @@ class Skin {
         this.hasWound = false;
         this.woundStart = null;
         this.woundEnd = null;
+        this.woundEntranceY = null;
         this.wound = new Wound(woundArgs);
 
         this.generate();
@@ -30,6 +31,7 @@ class Skin {
         this.woundStart = start;
         this.woundEnd = end;
         let originalVesselBoundary = [...this.vessel.topBoundary];
+        this.woundEntranceY = originalVesselBoundary[Math.round(x)];
 
         for (let i = -width; i < width; i++) {
             this.epidermis.topBoundary[i + x] = 100;
@@ -41,8 +43,34 @@ class Skin {
         this.wound.generateCollagen(start, end, originalVesselBoundary);
 
         for (let cell of this.cells) {
-            cell.setWound(start, end);
+            cell.setWound(start, end, this.woundEntranceY);
         }
+    }
+
+    getBleedingForce(cell) {
+        if (!this.hasWound) {
+            return createVector(0, 0);
+        }
+
+        let woundX = (this.woundStart + this.woundEnd) / 2;
+        // Distancia de la celula a la entrada de la herida
+        let distanceToWound = dist(cell.pos.x, cell.pos.y, woundX, this.woundEntranceY);
+        let bleedingRange = 250;
+        if (distanceToWound > bleedingRange) {
+            return createVector(0, 0);
+        }
+        // Entre más lejos esté de la herida, menor fuerza recibe
+        let strength = map(distanceToWound, 0, bleedingRange, 40, 5);
+        // Si está dentro del vaso,
+        // se le aplica fuerza hacia la abertura
+        if (cell.pos.y >= this.woundEntranceY) {
+            let direction = createVector(woundX - cell.pos.x, -100);
+            direction.setMag(strength);
+            return direction;
+        }
+        // Si ya está dentro de la herida
+        // se impulsa hacia arriba
+        return createVector(0, -strength);
     }
 
     generate() {
@@ -133,8 +161,8 @@ class Skin {
         );
 
         if (this.hasWound) {
-            redBloodCell.setWound(this.woundStart, this.woundEnd);
-            platelet.setWound(this.woundStart, this.woundEnd);
+            redBloodCell.setWound(this.woundStart, this.woundEnd, this.woundEntranceY);
+            platelet.setWound(this.woundStart, this.woundEnd, this.woundEntranceY);
         }
 
         this.cells.push(redBloodCell);
@@ -146,6 +174,9 @@ class Skin {
             if (!c.isDead() && !c.isOutsideVessel()) {
                 let force = this.vessel.getVector(c.pos.x, c.pos.y);
                 c.addForce(force);
+                //fuerza del sangrado
+                let bleedingForce = this.getBleedingForce(c);
+                c.addForce(bleedingForce);
                 c.applyDrag(this.dragCoefficient);
             }
             c.update();

@@ -1,5 +1,5 @@
 class Skin {
-    constructor(w, h, seed = 12345) {
+    constructor(w, h, woundArgs, seed = 12345) {
         this.width = w;
         this.height = h;
 
@@ -10,7 +10,21 @@ class Skin {
         this.dragCoefficient = 0.05;
         this.cells = [];
 
+
+        this.wound = new Wound(woundArgs);
+
         this.generate();
+    }
+
+    createWound(x) {
+        let width = this.wound.width;
+        for (let i = -width; i < width; i++) {
+            this.epidermis.topBoundary[i+x] = 100;
+            this.dermis.topBoundary[i+x] = 100;
+            this.vessel.topBoundary[i+x] = 100;
+        }
+        this.vessel.removeCells(x-width, x+width);
+        //TO DO: producción de colágeno
     }
 
     generate() {
@@ -80,9 +94,11 @@ class Skin {
         this.dermis.display();
         this.hypodermis.display();
         this.vessel.display();
+        this.wound.display();
         for (let cell of this.cells) {
             cell.display();
         }
+
     }
 
     addCell(mass) {

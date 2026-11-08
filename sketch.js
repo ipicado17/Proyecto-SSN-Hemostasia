@@ -1,9 +1,16 @@
 let skin;
+let collagenRatio;
+let woundWidth;
+let woundArgs = {
+        collagenRatio: 50,
+        width: 50,
+        maxGrowth: 30,
+};
 
 function setup() {
     createCanvas(800, 600);
 
-    skin = new Skin(width, height, 12345);
+    skin = new Skin(width, height, woundArgs, 12345);
 }
 
 function draw() {
@@ -18,11 +25,16 @@ function draw() {
     skin.display();
 }
 
+function mousePressed() {
+    skin.createWound(floor(mouseX));
+}
+
 function keyPressed() {
     if (key.toLowerCase() === "r") {
         skin = new Skin(
             width,
             height,
+            woundArgs,
             Math.floor(random(1000000))
         );
     }

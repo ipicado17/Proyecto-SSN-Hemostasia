@@ -32,6 +32,41 @@ class BloodVessel {
         this.generateFlowField();
     }
 
+    removeCells(start, end) {
+
+        let cells = [];
+        let distance;
+        let cell;
+
+        for (let i = 0; i < this.endothelialCells.length; i++) {
+            cell = this.endothelialCells[i];
+
+            if (cell.side == 1 && ((start <= cell.pos.x*1.01+cell.pos.w && cell.pos.x <= end) || 
+                                   (start <= cell.pos.x*1.01-cell.pos.w && cell.pos.x <= end))) {
+                cells.push(cell);
+            }
+
+            // cell = this.endothelialCells[i];
+            // distance = abs(x - cell.pos.x)*2;
+            // if (cell.side == 1 && distance <= cell.w) {
+            //     cells.push(cell);
+            // }
+        }
+
+        this.endothelialCells = this.endothelialCells.filter(x => !cells.includes(x));
+
+        // let min = this.endothelialCells[0];
+        // for (let cell of this.endothelialCells) {
+        //     if (cell.side == 1 && abs(x - cell.pos.x) < abs(x - min.pos.x)) min = cell;
+        // }
+        // let index = this.endothelialCells.indexOf(min);
+
+        // if (index >= 0) {
+        //     console.log(this.endothelialCells);
+        //     this.endothelialCells.splice(index, 1);
+        // }
+    }
+
     generateEndothelialCells() {
         const cellWidth = 30;
         const cellHeight = 10;
@@ -65,7 +100,7 @@ class BloodVessel {
                 const centerX = x + normalX * cellHeight / 2;
                 const centerY = boundary[x] + normalY * cellHeight / 2;
                 //crear el objeto de célula endotelial
-                this.endothelialCells.push(new EndothelialCell(centerX, centerY, adjustedWidth, cellHeight, angle));
+                this.endothelialCells.push(new EndothelialCell(centerX, centerY, adjustedWidth, cellHeight, angle, side));
             }
         }
     }

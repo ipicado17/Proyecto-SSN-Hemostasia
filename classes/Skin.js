@@ -10,21 +10,31 @@ class Skin {
         this.dragCoefficient = 0.05;
         this.cells = [];
 
-
+        this.hasWound = false;
         this.wound = new Wound(woundArgs);
 
         this.generate();
     }
 
     createWound(x) {
-        let width = this.wound.width;
-        for (let i = -width; i < width; i++) {
-            this.epidermis.topBoundary[i+x] = 100;
-            this.dermis.topBoundary[i+x] = 100;
-            this.vessel.topBoundary[i+x] = 100;
+        if (this.hasWound) {
+            return;
         }
-        this.vessel.removeCells(x-width, x+width);
-        //TO DO: producción de colágeno
+        this.hasWound = true;
+
+        let width = this.wound.width;
+        let start = x - width;
+        let end = x + width;
+        let originalVesselBoundary = [...this.vessel.topBoundary];
+
+        for (let i = -width; i < width; i++) {
+            this.epidermis.topBoundary[i + x] = 100;
+            this.dermis.topBoundary[i + x] = 100;
+            this.vessel.topBoundary[i + x] = 100;
+        }
+
+        this.vessel.removeCells(start, end);
+        this.wound.generateCollagen(start, end, originalVesselBoundary);
     }
 
     generate() {
@@ -53,9 +63,9 @@ class Skin {
 
             //VASO:
             //posición inicial + x * frecuencia del ruido
-            const vesselWave = map(noise(100 + x * 0.004),0, 1, -1, 1);
-            const upperDetail = map(noise(200 + x * 0.006),0, 1, -1, 1);
-            const lowerDetail = map(noise(300 + x * 0.005),0, 1, -1, 1);
+            const vesselWave = map(noise(100 + x * 0.004), 0, 1, -1, 1);
+            const upperDetail = map(noise(200 + x * 0.006), 0, 1, -1, 1);
+            const lowerDetail = map(noise(300 + x * 0.005), 0, 1, -1, 1);
             //altura base + ondulación principal * amplitud + irregularidad independiente * amplitud
             vesselTop.push(this.height * 0.30 + vesselWave * this.height * 0.025 + upperDetail * this.height * 0.006);
             vesselBottom.push(this.height * 0.90 + vesselWave * this.height * 0.025 + lowerDetail * this.height * 0.008);

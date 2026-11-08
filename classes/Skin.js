@@ -11,6 +11,8 @@ class Skin {
         this.cells = [];
 
         this.hasWound = false;
+        this.woundStart = null;
+        this.woundEnd = null;
         this.wound = new Wound(woundArgs);
 
         this.generate();
@@ -25,6 +27,8 @@ class Skin {
         let width = this.wound.width;
         let start = x - width;
         let end = x + width;
+        this.woundStart = start;
+        this.woundEnd = end;
         let originalVesselBoundary = [...this.vessel.topBoundary];
 
         for (let i = -width; i < width; i++) {
@@ -35,6 +39,10 @@ class Skin {
 
         this.vessel.removeCells(start, end);
         this.wound.generateCollagen(start, end, originalVesselBoundary);
+
+        for (let cell of this.cells) {
+            cell.setWound(start, end);
+        }
     }
 
     generate() {
@@ -112,17 +120,25 @@ class Skin {
     }
 
     addCell(mass) {
-        this.cells.push(RedBloodCell.createRandomCell(
+        let redBloodCell = RedBloodCell.createRandomCell(
             mass,
             this.vessel.topBoundary,
             this.vessel.bottomBoundary
-        ));
+        );
 
-        this.cells.push(Platelet.createRandomCell(
+        let platelet = Platelet.createRandomCell(
             mass,
             this.vessel.topBoundary,
             this.vessel.bottomBoundary
-        ));
+        );
+
+        if (this.hasWound) {
+            redBloodCell.setWound(this.woundStart, this.woundEnd);
+            platelet.setWound(this.woundStart, this.woundEnd);
+        }
+
+        this.cells.push(redBloodCell);
+        this.cells.push(platelet);
     }
 
     update() {

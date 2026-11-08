@@ -1,30 +1,34 @@
 class Cell {
-    constructor(x, y, mass, topVessel, botVessel){
+    constructor(x, y, mass, topVessel, botVessel) {
         this.pos = createVector(x, y);
         this.vel = createVector(0, 0);
         this.acc = createVector(0, 0);
-        this.mass = mass < 0? 0: mass;
+        this.mass = mass < 0 ? 0 : mass;
         this.ang = random(-PI / 3, PI / 3);
         this.r = sqrt(this.mass / PI);
         this.c = color("#E53945");
         this.massLoss = 1;
         this.borderDamp = 0.8;
-        this.maxSpeed = 2; 
+        this.maxSpeed = 2;
 
         /* Atributos para establecer los límites de las células
          * con base al vaso sanguíneo
          */
         this.topVessel = topVessel;
-        this.botVessel = botVessel;       
+        this.botVessel = botVessel;
+
+        //atributos para que las celulas sepan donde está la herida
+        this.woundStart = null;
+        this.woundEnd = null;
     }
 
-    static createRandomCell(mass, topVessel, botVessel) {}
+    static createRandomCell(mass, topVessel, botVessel) { }
 
-    display(){}
+    display() { }
 
-    borders() {}
+    borders() { }
 
-    update(){
+    update() {
         this.vel.add(this.acc);
         this.vel.limit(this.maxSpeed);
         this.pos.add(this.vel);
@@ -39,12 +43,12 @@ class Cell {
 
     }
 
-    addForce(f){
+    addForce(f) {
         let force = p5.Vector.div(f, this.mass);
         this.acc.add(force);
     }
 
-    applyDrag(d){
+    applyDrag(d) {
         let drag = this.vel.copy();
         drag.normalize();
         drag.mult(this.vel.mag() ** 2);
@@ -59,5 +63,18 @@ class Cell {
     isOutsideVessel() {
         let maxX = Math.min(this.topVessel.length, this.botVessel.length) - 1;
         return this.pos.x < 0 || this.pos.x > maxX;
+    }
+
+    setWound(start, end) {
+        this.woundStart = start;
+        this.woundEnd = end;
+    }
+
+    isUnderWound() {
+        return (
+            this.woundStart !== null &&
+            this.pos.x >= this.woundStart &&
+            this.pos.x <= this.woundEnd
+        );
     }
 }

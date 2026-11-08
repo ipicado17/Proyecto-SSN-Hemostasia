@@ -38,11 +38,20 @@ class Platelet extends Cell {
         let minY = this.topVessel[index] + this.r + endothelialGap;
         let maxY = this.botVessel[index] - this.r - endothelialGap;
 
-        if (this.pos.y < minY)
+        // La pared superior no existe dentro de la herida
+        if (!this.isUnderWound()) {
+            if (this.pos.y < minY) {
+                this.vel.y *= -this.borderDamp;
+            }
+
+            this.pos.y = max(this.pos.y, minY);
+        }
+
+        // La pared inferior sigue existiendo
+        if (this.pos.y > maxY) {
             this.vel.y *= -this.borderDamp;
-        if (this.pos.y > maxY)
-            this.vel.y *= -this.borderDamp;
-        this.pos.y = constrain(this.pos.y, minY, maxY);
+            this.pos.y = maxY;
+        }
     }
 
     static createRandomCell(mass, topVessel, botVessel) {

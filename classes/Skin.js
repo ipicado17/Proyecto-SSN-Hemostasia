@@ -11,11 +11,14 @@ class Skin {
         this.cells = [];
 
         this.hasWound = false;
-        this.woundStart = null;
+        /*this.woundStart = null;
         this.woundEnd = null;
-        this.woundEntranceY = null;
+        this.woundEntranceY = null;*/
+        this.attractor = null;
         this.wound = new Wound(woundArgs);
-
+        this.state = 0; //Antes de la herida
+        this.wait = 0;
+        this.transformedCells = [];
         this.generate();
     }
 
@@ -28,10 +31,10 @@ class Skin {
         let width = this.wound.width;
         let start = x - width;
         let end = x + width;
-        this.woundStart = start;
-        this.woundEnd = end;
+        this.wound.start = start;
+        this.wound.end = end;
         let originalVesselBoundary = [...this.vessel.topBoundary];
-        this.woundEntranceY = originalVesselBoundary[Math.round(x)];
+        this.wound.entranceY = originalVesselBoundary[Math.round(x)];
 
         for (let i = -width; i < width; i++) {
             this.epidermis.topBoundary[i + x] = 100;
@@ -40,11 +43,20 @@ class Skin {
         }
 
         this.vessel.removeCells(start, end);
-        this.wound.generateCollagen(start, end, originalVesselBoundary);
+        this.wound.generateCollagen(originalVesselBoundary);
 
         for (let cell of this.cells) {
-            cell.setWound(start, end, this.woundEntranceY);
+            cell.setWound(this.wound);
         }
+
+        this.attractor = new Attractor(
+        x,
+        -10,
+        10,
+        3000
+        );
+        this.state = 1; //Herida
+        this.wait = frameCount + frameRate()*0;
     }
 
     getBleedingForce(cell) {
@@ -52,25 +64,27 @@ class Skin {
             return createVector(0, 0);
         }
 
-        let woundX = (this.woundStart + this.woundEnd) / 2;
+        
+
+        /* let woundX = (this.wound.start + this.wound.end) / 2;
         // Distancia de la celula a la entrada de la herida
-        let distanceToWound = dist(cell.pos.x, cell.pos.y, woundX, this.woundEntranceY);
+        let distanceToWound = dist(cell.pos.x, cell.pos.y, woundX, this.wound.entranceY);
         let bleedingRange = 250;
         if (distanceToWound > bleedingRange) {
-            return createVector(0, 0);
+             return createVector(0, 0);
         }
-        // Entre más lejos esté de la herida, menor fuerza recibe
+         // Entre más lejos esté de la herida, menor fuerza recibe
         let strength = map(distanceToWound, 0, bleedingRange, 40, 5);
-        // Si está dentro del vaso,
-        // se le aplica fuerza hacia la abertura
-        if (cell.pos.y >= this.woundEntranceY) {
-            let direction = createVector(woundX - cell.pos.x, -100);
-            direction.setMag(strength);
+         // Si está dentro del vaso,
+         // se le aplica fuerza hacia la abertura
+        if (cell.pos.y >= this.wound.entranceY) {
+             let direction = createVector(woundX - cell.pos.x, -100);
+             direction.setMag(strength);
             return direction;
         }
-        // Si ya está dentro de la herida
-        // se impulsa hacia arriba
-        return createVector(0, -strength);
+         // Si ya está dentro de la herida
+         // se impulsa hacia arriba
+        return createVector(0, -strength); */
     }
 
     generate() {
@@ -144,7 +158,6 @@ class Skin {
         for (let cell of this.cells) {
             cell.display();
         }
-
     }
 
     addCell(mass) {
@@ -157,27 +170,48 @@ class Skin {
         let platelet = Platelet.createRandomCell(
             mass,
             this.vessel.topBoundary,
-            this.vessel.bottomBoundary
+            this.vessel.bottomBoundary,
+            this.transformedCells
         );
 
-        if (this.hasWound) {
-            redBloodCell.setWound(this.woundStart, this.woundEnd, this.woundEntranceY);
-            platelet.setWound(this.woundStart, this.woundEnd, this.woundEntranceY);
-        }
+        redBloodCell.setWound(this.wound);
+        platelet.setWound(this.wound);
 
         this.cells.push(redBloodCell);
         this.cells.push(platelet);
     }
 
+    transformPlacelet(c) {
+        if (
+                this.state === 2 &&
+                c instanceof Platelet &&
+                c.isUnderWound() &&
+                this.wound.collagen.some(
+                    collagen =>
+                        dist(c.pos.x, c.pos.y, collagen.pos.x, collagen.pos.y) <= c.r + 20
+                )
+            ) {
+                c.transformed = true;
+            }
+        this.transformedCells.push(c);
+    }
+
     update() {
+        if (this.state == 1) {
+            if (frameCount >= this.wait) {
+                this.state = 2; //Tapon plaquetario temporal
+            }
+        }
         for (let c of this.cells) {
+            this.transformPlacelet(c);
             if (!c.isDead() && !c.isOutsideVessel()) {
                 let force = this.vessel.getVector(c.pos.x, c.pos.y);
                 c.addForce(force);
                 //fuerza del sangrado
-                let bleedingForce = this.getBleedingForce(c);
-                c.addForce(bleedingForce);
+                //let bleedingForce = this.getBleedingForce(c);
+                //c.addForce(bleedingForce);
                 c.applyDrag(this.dragCoefficient);
+                if (this.attractor !== null) this.attractor.attract(c);
             }
             c.update();
             if (c.isDead()) {

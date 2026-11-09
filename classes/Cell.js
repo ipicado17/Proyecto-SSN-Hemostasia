@@ -17,10 +17,7 @@ class Cell {
         this.topVessel = topVessel;
         this.botVessel = botVessel;
 
-        //atributos para que las celulas sepan donde está la herida
-        this.woundStart = null;
-        this.woundEnd = null;
-        this.woundEntranceY = null;
+        this.wound;
     }
 
     static createRandomCell(mass, topVessel, botVessel) { }
@@ -44,6 +41,15 @@ class Cell {
 
     }
 
+    touch(a) {
+        let d = dist(this.pos.x,this.pos.y, a.pos.x,a.pos.y);
+        
+        if (d <= a.r+this.r) {
+            return true;
+        }
+        return false;
+    }
+
     addForce(f) {
         let force = p5.Vector.div(f, this.mass);
         this.acc.add(force);
@@ -63,28 +69,26 @@ class Cell {
 
     isOutsideVessel() {
         let maxX = Math.min(this.topVessel.length, this.botVessel.length) - 1;
-        let escapedThroughWound = this.woundStart !== null && this.pos.y < -this.r;
+        let escapedThroughWound = this.wound.start !== null && this.pos.y < -this.r;
         return (this.pos.x < 0 || this.pos.x > maxX || escapedThroughWound);
     }
 
-    setWound(start, end, entranceY) {
-        this.woundStart = start;
-        this.woundEnd = end;
-        this.woundEntranceY = entranceY;
+    setWound(wound) {
+        this.wound = wound;
     }
 
     isUnderWound() {
         return (
-            this.woundStart !== null &&
-            this.pos.x >= this.woundStart &&
-            this.pos.x <= this.woundEnd
+            this.wound.start !== null &&
+            this.pos.x >= this.wound.start &&
+            this.pos.x <= this.wound.end
         );
     }
 
     isInsideWoundChannel() {
         return (
-            this.woundEntranceY !== null &&
-            this.pos.y < this.woundEntranceY
+            this.wound.entranceY !== null &&
+            this.pos.y < this.wound.entranceY
         );
     }
 
@@ -94,14 +98,14 @@ class Cell {
         }
 
         // Pared izquierda de la herida
-        if (this.pos.x - this.r < this.woundStart) {
-            this.pos.x = this.woundStart + this.r;
+        if (this.pos.x - this.r < this.wound.start) {
+            this.pos.x = this.wound.start + this.r;
             this.vel.x = abs(this.vel.x) * this.borderDamp;
         }
 
         // Pared derecha de la herida
-        if (this.pos.x + this.r > this.woundEnd) {
-            this.pos.x = this.woundEnd - this.r;
+        if (this.pos.x + this.r > this.wound.end) {
+            this.pos.x = this.wound.end - this.r;
             this.vel.x = -abs(this.vel.x) * this.borderDamp;
         }
     }

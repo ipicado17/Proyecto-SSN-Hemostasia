@@ -5,12 +5,15 @@ class Wound {
         this.collagenRatio = args.collagenRatio;
         this.maxGrowth = args.maxGrowth;
         this.activated = false;
+        this.start;
+        this.end;
+        this.entranceY;
     }
 
-    generateCollagen(startX, endX, vesselBoundary) {
+    generateCollagen(vesselBoundary) {
         this.collagen = [];
 
-        for (let x = startX; x <= endX; x += 6) {
+        for (let x = this.start; x <= this.end; x += 6) {
             let index = constrain(
                 Math.round(x),
                 0,

@@ -3,7 +3,7 @@ class Platelet extends Cell {
         super(x, y, mass, topVessel, botVessel);
         this.c = color("#FFFFFF");
         this.maxSpeed = 2;
-        this.transformed = false;
+        this.state = 0;
         this.transformedCells = transformedCells;
     }
 
@@ -15,12 +15,11 @@ class Platelet extends Cell {
         stroke("#B8B8B8");
         strokeWeight(1);
         fill(this.c);
-
         const radius = this.r;
         const spikeRadius = radius * 1.8;
         const points = 12;
 
-        if (this.transformed) {
+        if (this.state === 2) {
             beginShape();
             for (let i = 0; i < points; i++) {
                 const angle = TWO_PI * i / points;
@@ -47,16 +46,16 @@ class Platelet extends Cell {
     borders() {
         
         this.woundBorders();
-        if (this.transformed) {
+        if (this.state !== 0) {
             for (let c of this.transformedCells) {
                 if (c.touch(this)) {
                         this.separate(this, c);
                     }
             }
 
-            if (this.pos.y <= this.r) {   
+            if (this.isInsideWoundChannel()) {   
                 this.vel.y *= -this.borderDamp;
-                this.pos.y = this.r;
+                this.pos.y = this.wound.entranceY-10;
             }    
         }
         // Las paredes verticales siguen la forma del vaso en cada x.

@@ -20,6 +20,7 @@ class Skin {
         this.wait = 0;
         this.transformedCells = [];
         this.generate();
+        this.change = false;
     }
 
     createWound(x) {
@@ -56,35 +57,8 @@ class Skin {
         3000
         );
         this.state = 1; //Herida
-        this.wait = frameCount + frameRate()*0;
-    }
-
-    getBleedingForce(cell) {
-        if (!this.hasWound) {
-            return createVector(0, 0);
-        }
-
-        
-
-        /* let woundX = (this.wound.start + this.wound.end) / 2;
-        // Distancia de la celula a la entrada de la herida
-        let distanceToWound = dist(cell.pos.x, cell.pos.y, woundX, this.wound.entranceY);
-        let bleedingRange = 250;
-        if (distanceToWound > bleedingRange) {
-             return createVector(0, 0);
-        }
-         // Entre más lejos esté de la herida, menor fuerza recibe
-        let strength = map(distanceToWound, 0, bleedingRange, 40, 5);
-         // Si está dentro del vaso,
-         // se le aplica fuerza hacia la abertura
-        if (cell.pos.y >= this.wound.entranceY) {
-             let direction = createVector(woundX - cell.pos.x, -100);
-             direction.setMag(strength);
-            return direction;
-        }
-         // Si ya está dentro de la herida
-         // se impulsa hacia arriba
-        return createVector(0, -strength); */
+        this.change = true;
+        this.wait = frameCount + frameRate()*5;
     }
 
     generate() {
@@ -182,34 +156,38 @@ class Skin {
     }
 
     transformPlacelet(c) {
+
         if (
-                this.state === 2 &&
-                c instanceof Platelet &&
-                c.isUnderWound() &&
-                this.wound.collagen.some(
-                    collagen =>
-                        dist(c.pos.x, c.pos.y, collagen.pos.x, collagen.pos.y) <= c.r + 20
-                )
-            ) {
-                c.transformed = true;
+            c instanceof Platelet &&
+            c.isUnderWound() &&
+            this.wound.collagen.some(
+                collagen =>
+                    dist(c.pos.x, c.pos.y, collagen.pos.x, collagen.pos.y) <= c.r + 20
+            )
+        ) {
+            if (c.state === 0) {
+                this.transformedCells.push(c);
             }
-        this.transformedCells.push(c);
+            if (this.state === 1) {
+                c.state = 1;
+                c.maxSpeed /= 1.02;
+            }
+            if (this.state === 2) {
+                c.state = 2;
+                c.maxSpeed /= 1.02;
+            }
+        }
     }
 
     update() {
-        if (this.state == 1) {
-            if (frameCount >= this.wait) {
-                this.state = 2; //Tapon plaquetario temporal
-            }
-        }
+        console.log(this.transformedCells.length);
         for (let c of this.cells) {
-            this.transformPlacelet(c);
+
             if (!c.isDead() && !c.isOutsideVessel()) {
+                this.transformPlacelet(c);
+
                 let force = this.vessel.getVector(c.pos.x, c.pos.y);
-                c.addForce(force);
-                //fuerza del sangrado
-                //let bleedingForce = this.getBleedingForce(c);
-                //c.addForce(bleedingForce);
+                c.addForce(c.state === 0 ? force : force.div(10));
                 c.applyDrag(this.dragCoefficient);
                 if (this.attractor !== null) this.attractor.attract(c);
             }
@@ -219,5 +197,11 @@ class Skin {
             }
         }
         this.vessel.updateFlowField();
+
+        if (this.change && frameCount >= this.wait) {
+            console.log(this.state);
+            this.change = false;
+            this.state++;
+        }
     }
 }

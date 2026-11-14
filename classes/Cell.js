@@ -44,8 +44,10 @@ class Cell {
 
     touch(a) {
         let d = dist(this.pos.x,this.pos.y, a.pos.x,a.pos.y);
+        const thisRadius = this.collisionRadius || this.r;
+        const otherRadius = a.collisionRadius || a.r;
         
-        if (d <= a.r+this.r) {
+        if (d <= otherRadius + thisRadius) {
             return true;
         }
         return false;

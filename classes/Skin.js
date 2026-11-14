@@ -162,21 +162,46 @@ class Skin {
         if (
             c instanceof Platelet &&
             c.isUnderWound() &&
-            this.wound.collagen.some(
+            (c.state !== 0 || this.wound.collagen.some(
                 collagen =>
                     dist(c.pos.x, c.pos.y, collagen.pos.x, collagen.pos.y) <= c.r + 20
-            )
+            ))
         ) {
             if (c.state === 0) {
                 this.transformedCells.push(c);
-            }
-            if (this.state === 1) {
                 c.state = 1;
                 c.maxSpeed /= 1.02;
-            }
-            if (this.state === 2) {
+                c.activationFrame = frameCount + frameRate() * 5;
+            } else if (
+                c.state === 1 &&
+                frameCount >= c.activationFrame
+            ) {
                 c.state = 2;
-                c.maxSpeed /= 1.02;
+                c.vel.mult(0);
+            }
+
+            const target = this.wound.collagen.reduce(
+                (best, collagen) => {
+                    const occupied = this.transformedCells.filter(
+                        platelet =>
+                            dist(
+                                platelet.pos.x,
+                                platelet.pos.y,
+                                collagen.pos.x,
+                                collagen.pos.y
+                            ) < 30
+                    ).length;
+
+                    return occupied < best.occupied
+                        ? { collagen, occupied }
+                        : best;
+                },
+                { collagen: this.wound.collagen[0], occupied: Infinity }
+            );
+            if (c.state !== 2) {
+                const slide = p5.Vector.sub(target.collagen.pos, c.pos);
+                slide.mult(0.05);
+                c.addForce(slide);
             }
         }
     }
@@ -188,10 +213,14 @@ class Skin {
             if (!c.isDead() && !c.isOutsideVessel()) {
                 this.transformPlacelet(c);
 
-                let force = this.vessel.getVector(c.pos.x, c.pos.y);
-                c.addForce(c.state === 0 ? force : force.div(10));
+                if (c.state !== 2) {
+                    let force = this.vessel.getVector(c.pos.x, c.pos.y);
+                    c.addForce(c.state === 0 ? force : force.div(10));
+                }
                 c.applyDrag(this.dragCoefficient);
-                if (this.attractor !== null) this.attractor.attract(c);
+                if (this.attractor !== null && c.state !== 2) {
+                    this.attractor.attract(c);
+                }
             }
             c.update();
             if (c.isDead()) {

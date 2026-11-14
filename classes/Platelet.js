@@ -1,11 +1,13 @@
 class Platelet extends Cell {
     constructor(x, y, mass, topVessel, botVessel, transformedCells = []) {
         super(x, y, mass, topVessel, botVessel);
-        this.radiusScale = 0.6;
+        this.radiusScale = 0.8;
         this.r = sqrt(this.mass / PI) * this.radiusScale;
+        this.collisionRadius = this.r * 1.25;
         this.c = color("#FFFFFF");
         this.maxSpeed = 2;
         this.state = 0;
+        this.activationFrame = null;
         this.transformedCells = transformedCells;
     }
 
@@ -37,29 +39,52 @@ class Platelet extends Cell {
     }
 
     separate(a1, a2) {
-        let d1 = p5.Vector.sub(a1.pos, a2.pos);
+        const offset = p5.Vector.sub(a1.pos, a2.pos);
+        const distance = offset.mag();
 
-        d1.normalize();
-        d1.setMag(a1.r + a2.r);
-        d1.add(a2.pos);
-        a1.pos = d1;
+        if (distance === 0) {
+            offset.set(1, 0);
+        } else {
+            offset.div(distance);
+        }
+
+        const radius1 = a1.collisionRadius || a1.r;
+        const radius2 = a2.collisionRadius || a2.r;
+        const overlap = radius1 + radius2 - distance;
+        if (overlap <= 0) {
+            return;
+        }
+
+        offset.mult(overlap * 0.5);
+        a1.pos.add(offset);
+        a2.pos.sub(offset);
+
+        const incoming = a1.vel.dot(offset);
+        if (incoming < 0) {
+            a1.vel.sub(p5.Vector.mult(offset, incoming / offset.magSq()));
+        }
     }
 
     borders() {
 
-        this.woundBorders();
         if (this.state !== 0) {
-            for (let c of this.transformedCells) {
+            const thisIndex = this.transformedCells.indexOf(this);
+            for (let i = 0; i < thisIndex; i++) {
+                const c = this.transformedCells[i];
                 if (c.touch(this)) {
                     this.separate(this, c);
                 }
             }
 
             if (this.isInsideWoundChannel()) {
-                this.vel.y *= -this.borderDamp;
-                this.pos.y = this.wound.entranceY - 10;
+                this.pos.y = constrain(
+                    this.pos.y,
+                    this.wound.entranceY - 20,
+                    this.wound.entranceY - this.r
+                );
             }
         }
+        this.woundBorders();
         // Las paredes verticales siguen la forma del vaso en cada x.
         let index = Math.round(constrain(this.pos.x, 0, this.topVessel.length - 1));
         let endothelialGap = 16;

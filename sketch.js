@@ -3,7 +3,7 @@ let collagenRatio;
 let woundWidth;
 let woundArgs = {
         collagenRatio: 50,
-        width: 50,
+        width: 100,
         maxGrowth: 30,
 };
 

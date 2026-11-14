@@ -29,18 +29,20 @@ class Skin {
         }
         this.hasWound = true;
 
-        let width = this.wound.width;
-        let start = x - width;
-        let end = x + width;
+        const centerX = constrain(Math.round(x), 0, this.width);
+        const halfWidth = this.wound.width;
+        const start = max(0, centerX - halfWidth);
+        const end = min(this.width, centerX + halfWidth);
+
         this.wound.start = start;
         this.wound.end = end;
         let originalVesselBoundary = [...this.vessel.topBoundary];
-        this.wound.entranceY = originalVesselBoundary[Math.round(x)];
+        this.wound.entranceY = originalVesselBoundary[centerX];
 
-        for (let i = -width; i < width; i++) {
-            this.epidermis.topBoundary[i + x] = 100;
-            this.dermis.topBoundary[i + x] = 100;
-            this.vessel.topBoundary[i + x] = 100;
+        for (let i = start; i < end; i++) {
+            this.epidermis.topBoundary[i] = 100;
+            this.dermis.topBoundary[i] = 100;
+            this.vessel.topBoundary[i] = 100;
         }
 
         this.vessel.removeCells(start, end);
@@ -51,14 +53,14 @@ class Skin {
         }
 
         this.attractor = new Attractor(
-        x,
-        -10,
-        10,
-        3000
+            x,
+            -10,
+            5,
+            3000
         );
         this.state = 1; //Herida
         this.change = true;
-        this.wait = frameCount + frameRate()*5;
+        this.wait = frameCount + frameRate() * 5;
     }
 
     generate() {

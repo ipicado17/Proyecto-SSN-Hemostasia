@@ -5,7 +5,8 @@ class Cell {
         this.acc = createVector(0, 0);
         this.mass = mass < 0 ? 0 : mass;
         this.ang = random(-PI / 3, PI / 3);
-        this.r = sqrt(this.mass / PI);
+        this.radiusScale = 1;
+        this.r = sqrt(this.mass / PI) * this.radiusScale;
         this.c = color("#E53945");
         this.massLoss = 1;
         this.borderDamp = 0.8;
@@ -36,7 +37,7 @@ class Cell {
         // Solo pierde masa cuando su centro atraviesa un extremo horizontal.
         if (this.isOutsideVessel()) {
             this.mass = Math.max(0, this.mass - this.massLoss);
-            this.r = sqrt(this.mass / PI);
+            this.r = sqrt(this.mass / PI) * this.radiusScale;
         }
 
     }

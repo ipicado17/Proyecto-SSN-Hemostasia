@@ -20,6 +20,7 @@ class Skin {
         this.change = false;
         this.plateletsToClose = 15; // Variable cambiable por slide
         this.woundReady = false;
+        this.fibrin = null;
     }
 
     createWound(x) {
@@ -133,6 +134,9 @@ class Skin {
         for (let cell of this.cells) {
             cell.display();
         }
+        if (this.fibrin !== null) {
+            this.fibrin.display();
+        }
     }
 
     addCell(mass) {
@@ -236,13 +240,18 @@ class Skin {
     }
 
     finishWound() {
-        if (this.transformedCells.filter(c => c.state === 1).length <= 5 && !this.woundReady) {
-            this.woundReady == true;
-            for (const c of this.transformedCells) {
+        if (!this.wound.closed || this.woundReady) {
+            return;
+        }
+
+        for (const c of this.transformedCells) {
+            if (c.state === 1) {
                 c.state = 2;
                 c.vel.mult(0);
             }
         }
+
+        this.woundReady = true;
     }
 
     readyToApplyFribrin() {
@@ -276,6 +285,19 @@ class Skin {
             this.closeWoundIfReady();
         if (this.wound.closed)
             this.finishWound();
+
+        if (
+            this.wound.closed &&
+            !this.fibrin &&
+            this.transformedCells.length > 0 &&
+            this.readyToApplyFribrin()
+        ) {
+            this.fibrin = new Fibrin(this.transformedCells);
+        }
+
+        if (this.fibrin) {
+            this.fibrin.update();
+        }
 
         if (this.change && frameCount >= this.wait) {
             console.log(this.state);

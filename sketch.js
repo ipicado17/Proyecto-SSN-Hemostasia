@@ -23,6 +23,22 @@ function draw() {
 
     skin.update();
     skin.display();
+
+    if (frameCount % 120 === 0) {
+        const platelets = skin.cells.filter(
+            c => c instanceof Platelet
+        );
+
+        console.table({
+            fps: frameRate().toFixed(1),
+            total: platelets.length,
+            estado0: platelets.filter(c => c.state === 0).length,
+            estado1: platelets.filter(c => c.state === 1).length,
+            estado2: platelets.filter(c => c.state === 2).length,
+            heridaCerrada: skin.wound.closed,
+            fibrin: skin.readyToApplyFribrin()
+        });
+    }
 }
 
 function mousePressed() {

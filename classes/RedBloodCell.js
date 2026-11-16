@@ -3,6 +3,8 @@ class RedBloodCell extends Cell {
         super(x, y, mass, topVessel, botVessel);
         this.c = color("#D62828");
         this.maxSpeed = 3;
+        this.woundClosureChecked = false;
+        this.exitingThroughWound = false;
     }
 
     display() {
@@ -28,13 +30,16 @@ class RedBloodCell extends Cell {
         let minY = this.topVessel[index] + this.r + endothelialGap;
         let maxY = this.botVessel[index] - this.r - endothelialGap;
 
+        if (this.wound.closed && this.isUnderWound()) {
+            minY = this.wound.entranceY + this.r + endothelialGap;
+        }
+
         // La pared superior no existe dentro de la herida
-        if (!this.isUnderWound()) {
+        if ((!this.isUnderWound() || this.wound.closed) && !this.exitingThroughWound) {
             if (this.pos.y < minY) {
                 this.vel.y *= -this.borderDamp;
+                this.pos.y = minY;
             }
-
-            this.pos.y = max(this.pos.y, minY);
         }
 
         // La pared inferior sigue existiendo
@@ -55,4 +60,22 @@ class RedBloodCell extends Cell {
 
         return cell;
     }
+
+    update() {
+        // Identificar las células que atravesaron la barrera
+        if (this.wound.closed && !this.woundClosureChecked) {
+            this.woundClosureChecked = true;
+
+            let endothelialGap = 11;
+            let closedUpperBorder = this.wound.entranceY + this.r + endothelialGap;
+
+            this.exitingThroughWound = this.isUnderWound() && this.pos.y < closedUpperBorder;
+        }
+        super.update();
+    }
+
+    isDead() {
+        return super.isDead() || ( this.exitingThroughWound && this.pos.y + this.r < 0);
+    }
+
 }

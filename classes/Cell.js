@@ -8,7 +8,7 @@ class Cell {
         this.radiusScale = 1;
         this.r = sqrt(this.mass / PI) * this.radiusScale;
         this.c = color("#E53945");
-        this.massLoss = 1;
+        this.massLoss = 2;
         this.borderDamp = 0.8;
         this.maxSpeed = 2;
 

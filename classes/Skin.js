@@ -11,9 +11,6 @@ class Skin {
         this.cells = [];
 
         this.hasWound = false;
-        /*this.woundStart = null;
-        this.woundEnd = null;
-        this.woundEntranceY = null;*/
         this.attractor = null;
         this.wound = new Wound(woundArgs);
         this.state = 0; //Antes de la herida
@@ -21,6 +18,8 @@ class Skin {
         this.transformedCells = [];
         this.generate();
         this.change = false;
+        this.plateletsToClose = 15; // Variable cambiable por slide
+        this.woundReady = false;
     }
 
     createWound(x) {
@@ -158,47 +157,53 @@ class Skin {
     }
 
     transformPlacelet(c) {
-
-        if (
-            c instanceof Platelet &&
-            c.isUnderWound() &&
-            (c.state !== 0 || this.wound.collagen.some(
-                collagen =>
-                    dist(c.pos.x, c.pos.y, collagen.pos.x, collagen.pos.y) <= c.r + 20
-            ))
-        ) {
+        if (c instanceof Platelet && c.isUnderWound()) {
             if (c.state === 0) {
-                this.transformedCells.push(c);
-                c.state = 1;
-                c.maxSpeed /= 1.02;
-                c.activationFrame = frameCount + frameRate() * 5;
-            } else if (
-                c.state === 1 &&
-                frameCount >= c.activationFrame
-            ) {
-                c.state = 2;
-                c.vel.mult(0);
+                // No activar nuevas plaquetas después del cierre
+                if (!this.wound.closed) {
+                    let nearCollagen = this.wound.collagen.some(collagen =>
+                        dist(c.pos.x, c.pos.y, collagen.pos.x, collagen.pos.y) <= c.r + 20
+                    );
+
+                    if (nearCollagen) {
+                        this.transformedCells.push(c);
+                        c.state = 1;
+                        c.maxSpeed /= 1.02;
+                        c.activationFrame = frameCount + frameRate() * 5;
+                    }
+                }
+            } else if (c.state === 1) {
+                // Permitir completar la adhesión aunque la herida esté cerrada
+                let nearCollagen = this.wound.collagen.some(collagen =>
+                    dist(c.pos.x, c.pos.y, collagen.pos.x, collagen.pos.y) <= c.r + 10
+                );
+
+                if (frameCount >= c.activationFrame && nearCollagen) {
+                    c.state = 2;
+                    c.vel.mult(0);
+                }
             }
 
-            const target = this.wound.collagen.reduce(
-                (best, collagen) => {
-                    const occupied = this.transformedCells.filter(
-                        platelet =>
+            // Las plaquetas en estado 1 continúan moviéndose hacia el colágeno
+            if (c.state === 1 && this.wound.collagen.length > 0) {
+                const target = this.wound.collagen.reduce(
+                    (best, collagen) => {
+                        const occupied = this.transformedCells.filter(platelet =>
                             dist(
                                 platelet.pos.x,
                                 platelet.pos.y,
                                 collagen.pos.x,
                                 collagen.pos.y
-                            ) < 30
-                    ).length;
+                            ) < 100
+                        ).length;
 
-                    return occupied < best.occupied
-                        ? { collagen, occupied }
-                        : best;
-                },
-                { collagen: this.wound.collagen[0], occupied: Infinity }
-            );
-            if (c.state !== 2) {
+                        return occupied < best.occupied
+                            ? { collagen, occupied }
+                            : best;
+                    },
+                    { collagen: this.wound.collagen[0], occupied: Infinity }
+                );
+
                 const slide = p5.Vector.sub(target.collagen.pos, c.pos);
                 slide.mult(0.05);
                 c.addForce(slide);
@@ -206,8 +211,45 @@ class Skin {
         }
     }
 
+    isWoundReady() {
+        let adhered = this.transformedCells.filter(c => c.state === 2);
+        return adhered.length >= this.plateletsToClose;
+    }
+
+    closeWoundIfReady() {
+        if (this.isWoundReady()) {
+            this.wound.closed = true;
+            this.attractor = null;
+            this.reorganizedCells();
+        }
+    }
+
+    reorganizedCells() {
+        for (let i = 0; i < this.transformedCells.length; i++) {
+            let c1 = this.transformedCells[i];
+            for (let j = i + 1; j < this.transformedCells.length; j++) {
+                let c2 = this.transformedCells[j];
+                if (c1.state === 2 && c2.state === 2 && c1.touch(c2))
+                    c1.separate(c1, c2);
+            }
+        }
+    }
+
+    finishWound() {
+        if (this.transformedCells.filter(c => c.state === 1).length <= 5 && !this.woundReady) {
+            this.woundReady == true;
+            for (const c of this.transformedCells) {
+                c.state = 2;
+                c.vel.mult(0);
+            }
+        }
+    }
+
+    readyToApplyFribrin() {
+        return this.transformedCells.filter(c => c.state === 2).length === this.transformedCells.length;
+    }
+
     update() {
-        console.log(this.transformedCells.length);
         for (let c of this.cells) {
 
             if (!c.isDead() && !c.isOutsideVessel()) {
@@ -218,7 +260,7 @@ class Skin {
                     c.addForce(c.state === 0 ? force : force.div(10));
                 }
                 c.applyDrag(this.dragCoefficient);
-                if (this.attractor !== null && c.state !== 2) {
+                if (!this.wound.closed && this.attractor !== null && c.state !== 2) {
                     this.attractor.attract(c);
                 }
             }
@@ -227,7 +269,13 @@ class Skin {
                 this.cells.splice(this.cells.indexOf(c), 1);
             }
         }
+
         this.vessel.updateFlowField();
+
+        if (!this.wound.closed)
+            this.closeWoundIfReady();
+        if (this.wound.closed)
+            this.finishWound();
 
         if (this.change && frameCount >= this.wait) {
             console.log(this.state);

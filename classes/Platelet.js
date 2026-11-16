@@ -9,6 +9,12 @@ class Platelet extends Cell {
         this.state = 0;
         this.activationFrame = null;
         this.transformedCells = transformedCells;
+
+        // Variables para ADP
+        this.adpParticles = [];
+        this.adpRadius = 45;
+        this.adpEmissionInterval = 6;
+        this.maxADPParticles = 30;
     }
 
     display() {
@@ -34,8 +40,11 @@ class Platelet extends Cell {
         }
 
         ellipse(0, 0, radius * 2.5);
-
         pop();
+
+        for (let particle of this.adpParticles) {
+            particle.display();
+        }
     }
 
     separate(a1, a2) {
@@ -66,7 +75,6 @@ class Platelet extends Cell {
     }
 
     borders() {
-
         if (this.state !== 0) {
             const thisIndex = this.transformedCells.indexOf(this);
             for (let i = 0; i < thisIndex; i++) {
@@ -76,7 +84,7 @@ class Platelet extends Cell {
                 }
             }
 
-            if (this.isInsideWoundChannel()) {
+            if (this.state === 2 || this.isInsideWoundChannel()) {
                 this.pos.y = constrain(
                     this.pos.y,
                     this.wound.entranceY - 20,
@@ -91,8 +99,13 @@ class Platelet extends Cell {
         let minY = this.topVessel[index] + this.r + endothelialGap;
         let maxY = this.botVessel[index] - this.r - endothelialGap;
 
+        let woundBorder = this.state === 0 && this.wound.closed && this.isUnderWound();
+        if (woundBorder) {
+            minY = this.wound.entranceY + this.r + endothelialGap;
+        }
+
         // La pared superior no existe dentro de la herida
-        if (!this.isUnderWound()) {
+        if (!this.isUnderWound() || woundBorder) {
             if (this.pos.y < minY) {
                 this.vel.y *= -this.borderDamp;
             }
@@ -118,4 +131,28 @@ class Platelet extends Cell {
 
         return cell;
     }
+
+    update() {
+        super.update();
+
+        if (!this.wound || this.wound.closed) {
+            this.adpParticles.length = 0;
+        } else {
+            if (
+                (this.state === 1 || this.state === 2) && !this.isDead() &&
+                frameCount % this.adpEmissionInterval === 0 &&
+                this.adpParticles.length < this.maxADPParticles
+            ) {
+                this.adpParticles.push(new ADPParticle(this.pos.x, this.pos.y, this.adpRadius));
+            }
+
+            for (let i = 0; i < this.adpParticles.length; i++) {
+                let p = this.adpParticles[i];
+                p.update();
+                if (p.isDead())
+                    this.adpParticles.splice(i, 1);
+            }
+        }
+    }
+
 }

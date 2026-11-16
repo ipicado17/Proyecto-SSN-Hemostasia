@@ -8,6 +8,7 @@ class Wound {
         this.start;
         this.end;
         this.entranceY;
+        this.closed = false;
     }
 
     generateCollagen(vesselBoundary) {

@@ -24,6 +24,10 @@ function draw() {
     skin.update();
     skin.display();
 
+    debug();
+}
+
+function debug() {
     if (frameCount % 120 === 0) {
         const platelets = skin.cells.filter(
             c => c instanceof Platelet

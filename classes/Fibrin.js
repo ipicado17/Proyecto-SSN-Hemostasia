@@ -87,7 +87,7 @@ class Fibrin {
                 const restLen = distance + max(16, distance * 0.35);
 
                 this.springs.push(
-                    new FibrinSpring(agent1, agent2, 0.025, restLen)
+                    new FibrinSpring(agent1, agent2, 0.01, restLen)
                 );
                 this.connectionCounts[a]++;
                 this.connectionCounts[b]++;

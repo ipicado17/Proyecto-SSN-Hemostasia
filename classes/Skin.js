@@ -139,13 +139,19 @@ class Skin {
         }
     }
 
-    addCell(mass) {
+    addRedBloodCell(mass) {
         let redBloodCell = RedBloodCell.createRandomCell(
             mass,
             this.vessel.topBoundary,
             this.vessel.bottomBoundary
         );
 
+        redBloodCell.setWound(this.wound);
+
+        this.cells.push(redBloodCell);
+    }
+
+    addPlatelet(mass) {
         let platelet = Platelet.createRandomCell(
             mass,
             this.vessel.topBoundary,
@@ -153,10 +159,8 @@ class Skin {
             this.transformedCells
         );
 
-        redBloodCell.setWound(this.wound);
         platelet.setWound(this.wound);
 
-        this.cells.push(redBloodCell);
         this.cells.push(platelet);
     }
 

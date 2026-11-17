@@ -34,19 +34,21 @@ class Cell {
         this.acc.mult(0);
         this.borders();
 
-        // Solo pierde masa cuando su centro atraviesa un extremo horizontal.
-        if (this.isOutsideVessel()) {
+        let escapedThroughWound = this.wound.start !== null && this.pos.y < -this.r;
+
+        if (escapedThroughWound) {
+            this.mass = 0;
+        } else if (this.isOutsideVessel()) {
             this.mass = Math.max(0, this.mass - this.massLoss);
             this.r = sqrt(this.mass / PI) * this.radiusScale;
         }
-
     }
 
     touch(a) {
-        let d = dist(this.pos.x,this.pos.y, a.pos.x,a.pos.y);
+        let d = dist(this.pos.x, this.pos.y, a.pos.x, a.pos.y);
         const thisRadius = this.collisionRadius || this.r;
         const otherRadius = a.collisionRadius || a.r;
-        
+
         if (d <= otherRadius + thisRadius) {
             return true;
         }

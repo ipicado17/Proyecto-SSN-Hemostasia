@@ -18,7 +18,8 @@ class Skin {
         this.transformedCells = [];
         this.generate();
         this.change = false;
-        this.plateletsToClose = 15; // Variable cambiable por slide
+        this.plateletsToClose = 25; // Variable cambiable por slide
+        this.plateletAdhesion = 1.0;
         this.woundReady = false;
         this.fibrin = null;
     }
@@ -172,12 +173,14 @@ class Skin {
                     let nearCollagen = this.wound.collagen.some(collagen =>
                         dist(c.pos.x, c.pos.y, collagen.pos.x, collagen.pos.y) <= c.r + 20
                     );
-
-                    if (nearCollagen) {
-                        this.transformedCells.push(c);
-                        c.state = 1;
-                        c.maxSpeed /= 1.02;
-                        c.activationFrame = frameCount + frameRate() * 5;
+                    if (nearCollagen && !c.adhesionAttempted) {
+                        c.adhesionAttempted = true;
+                        if (random() < this.plateletAdhesion) {
+                            this.transformedCells.push(c);
+                            c.state = 1;
+                            c.maxSpeed /= 1.02;
+                            c.activationFrame = frameCount + frameRate() * 5;
+                        }
                     }
                 }
             } else if (c.state === 1) {

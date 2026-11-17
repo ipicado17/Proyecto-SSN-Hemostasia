@@ -9,6 +9,7 @@ class Platelet extends Cell {
         this.state = 0;
         this.activationFrame = null;
         this.transformedCells = transformedCells;
+        this.adhesionAttempted = false;
 
         // Variables para ADP
         this.adpParticles = [];

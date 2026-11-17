@@ -17,6 +17,16 @@ let labelPlatelets;
 let valuePlatelets;
 let plateletsPerSpawn = 1;
 
+let sliderPlateletsToClose;
+let labelPlateletsToClose;
+let valuePlateletsToClose;
+let plateletsToClose = 25;
+
+let sliderPlateletAdhesion;
+let labelPlateletAdhesion;
+let valuePlateletAdhesion;
+let plateletAdhesion = 100;
+
 function setup() {
     let canvas = createCanvas(800, 600);
     canvas.parent("canvas-container");
@@ -43,6 +53,8 @@ function draw() {
     skin.display();
     valueRedBloodCells.html("Valor actual: " + sliderRedBloodCells.value());
     valuePlatelets.html("Valor actual: " + sliderPlatelets.value());
+    valuePlateletsToClose.html("Valor actual: " + sliderPlateletsToClose.value());
+    valuePlateletAdhesion.html("Valor actual: " + sliderPlateletAdhesion.value() + "%");
     debug();
 }
 
@@ -106,10 +118,50 @@ function createSliders() {
     valuePlatelets = createDiv("Valor actual: 1");
     valuePlatelets.addClass("slider-value");
     valuePlatelets.parent(groupPlatelets);
+
+    // Plaquetas necesarias para cerrar el tapón
+    let groupPlateletsToClose = createDiv();
+    groupPlateletsToClose.addClass("slider-group");
+    groupPlateletsToClose.parent(slidersContainer);
+
+    labelPlateletsToClose = createDiv("Plaquetas necesarias para cerrar el tapón");
+    labelPlateletsToClose.addClass("slider-label");
+    labelPlateletsToClose.parent(groupPlateletsToClose);
+
+    sliderPlateletsToClose = createSlider(5, 50, 25, 1);
+    sliderPlateletsToClose.addClass("simulation-slider");
+    sliderPlateletsToClose.parent(groupPlateletsToClose);
+
+    valuePlateletsToClose = createDiv("Valor actual: 25");
+    valuePlateletsToClose.addClass("slider-value");
+    valuePlateletsToClose.parent(groupPlateletsToClose);
+
+    //porcentaje de adhesion platelaria
+    let groupPlateletAdhesion = createDiv();
+    groupPlateletAdhesion.addClass("slider-group");
+    groupPlateletAdhesion.parent(slidersContainer);
+
+    labelPlateletAdhesion = createDiv("Capacidad de adhesión plaquetaria");
+    labelPlateletAdhesion.addClass("slider-label");
+    labelPlateletAdhesion.parent(groupPlateletAdhesion);
+
+    sliderPlateletAdhesion = createSlider(0, 100, 100, 5);
+    sliderPlateletAdhesion.addClass("simulation-slider");
+    sliderPlateletAdhesion.parent(groupPlateletAdhesion);
+
+    valuePlateletAdhesion = createDiv("Valor actual: 100%");
+    valuePlateletAdhesion.addClass("slider-value");
+    valuePlateletAdhesion.parent(groupPlateletAdhesion);
 }
 
 function resetSimulation() {
     redBloodCellsPerSpawn = sliderRedBloodCells.value();
     plateletsPerSpawn = sliderPlatelets.value();
+    plateletsToClose = sliderPlateletsToClose.value();
+    plateletAdhesion = sliderPlateletAdhesion.value();
+
     skin = new Skin(width, height, woundArgs, Math.floor(random(1000000)));
+
+    skin.plateletsToClose = plateletsToClose;
+    skin.plateletAdhesion = plateletAdhesion / 100;
 }

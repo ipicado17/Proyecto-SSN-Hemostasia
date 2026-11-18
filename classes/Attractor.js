@@ -5,14 +5,16 @@ class Attractor {
         this.g = g;
         this.minDist = 0.1;
     }
-    attract(agent) {
+    
+    attract(agent, intensity = 1) {
         let r = p5.Vector.sub(this.pos, agent.pos);
         const mag = max(r.magSq(), this.minDist**2);
-        const c = this.g * this.mass * agent.mass / mag;
+        const c = intensity * this.g * this.mass * agent.mass / mag;
         r.normalize();
         r.mult(c);
         agent.addForce(r);
     }
+
     display() {
         noStroke();
         if (this.g > 0)

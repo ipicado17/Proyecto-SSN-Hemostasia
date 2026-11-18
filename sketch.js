@@ -27,6 +27,12 @@ let labelPlateletAdhesion;
 let valuePlateletAdhesion;
 let plateletAdhesion = 100;
 
+let sliderPlateletAttraction;
+let valuePlateletAttraction;
+
+let sliderFibrinSpeed;
+let valueFibrinSpeed;
+
 function setup() {
     let canvas = createCanvas(800, 600);
     canvas.parent("canvas-container");
@@ -49,12 +55,18 @@ function draw() {
         }
     }
 
-    skin.update();
-    skin.display();
+    skin.plateletAttraction = sliderPlateletAttraction.value() / 100;
+    valuePlateletAttraction.html("Valor actual: " + sliderPlateletAttraction.value() + "%");
+    skin.fibrinSpringsPerStep = sliderFibrinSpeed.value();
+    valueFibrinSpeed.html("Valor actual: " + sliderFibrinSpeed.value() + " frames");
+
     valueRedBloodCells.html("Valor actual: " + sliderRedBloodCells.value());
     valuePlatelets.html("Valor actual: " + sliderPlatelets.value());
     valuePlateletsToClose.html("Valor actual: " + sliderPlateletsToClose.value());
     valuePlateletAdhesion.html("Valor actual: " + sliderPlateletAdhesion.value() + "%");
+    
+    skin.update();
+    skin.display();
     debug();
 }
 
@@ -71,7 +83,9 @@ function debug() {
             estado1: platelets.filter(c => c.state === 1).length,
             estado2: platelets.filter(c => c.state === 2).length,
             heridaCerrada: skin.wound.closed,
-            fibrin: skin.readyToApplyFribrin()
+            fibrin: skin.readyToApplyFribrin(),
+            plaquetas: skin.cells.filter(c => c instanceof Platelet).length,
+            eritrocitos: skin.cells.filter(c => c instanceof RedBloodCell).length
         });
     }
 }
@@ -94,7 +108,7 @@ function createSliders() {
     labelRedBloodCells.addClass("slider-label");
     labelRedBloodCells.parent(groupRbc);
 
-    sliderRedBloodCells = createSlider(0, 5, 1, 0.25);
+    sliderRedBloodCells = createSlider(0, 3, 1, 0.10);
     sliderRedBloodCells.addClass("simulation-slider");
     sliderRedBloodCells.parent(groupRbc);
 
@@ -111,7 +125,7 @@ function createSliders() {
     labelPlatelets.addClass("slider-label");
     labelPlatelets.parent(groupPlatelets);
 
-    sliderPlatelets = createSlider(0, 5, 1, 0.25);
+    sliderPlatelets = createSlider(0, 3, 1, 0.10);
     sliderPlatelets.addClass("simulation-slider");
     sliderPlatelets.parent(groupPlatelets);
 
@@ -128,7 +142,7 @@ function createSliders() {
     labelPlateletsToClose.addClass("slider-label");
     labelPlateletsToClose.parent(groupPlateletsToClose);
 
-    sliderPlateletsToClose = createSlider(5, 50, 25, 1);
+    sliderPlateletsToClose = createSlider(5, 25, 20, 1);
     sliderPlateletsToClose.addClass("simulation-slider");
     sliderPlateletsToClose.parent(groupPlateletsToClose);
 
@@ -152,6 +166,40 @@ function createSliders() {
     valuePlateletAdhesion = createDiv("Valor actual: 100%");
     valuePlateletAdhesion.addClass("slider-value");
     valuePlateletAdhesion.parent(groupPlateletAdhesion);
+
+    // Intensidad de atracción plaquetaria
+    let groupPlateletAttraction = createDiv();
+    groupPlateletAttraction.addClass("slider-group");
+    groupPlateletAttraction.parent(slidersContainer);
+
+    let labelPlateletAttraction = createDiv("Intensidad de atracción plaquetaria");
+    labelPlateletAttraction.addClass("slider-label");
+    labelPlateletAttraction.parent(groupPlateletAttraction);
+
+    sliderPlateletAttraction = createSlider(0, 100, 50, 10);
+    sliderPlateletAttraction.addClass("simulation-slider");
+    sliderPlateletAttraction.parent(groupPlateletAttraction);
+
+    valuePlateletAttraction = createDiv("Valor actual: 100%");
+    valuePlateletAttraction.addClass("slider-value");
+    valuePlateletAttraction.parent(groupPlateletAttraction);
+
+    // Velocidad de formación de fibrina
+    let groupFibrinSpeed = createDiv();
+    groupFibrinSpeed.addClass("slider-group");
+    groupFibrinSpeed.parent(slidersContainer);
+
+    let labelFibrinSpeed = createDiv("Velocidad de formación de fibrina");
+    labelFibrinSpeed.addClass("slider-label");
+    labelFibrinSpeed.parent(groupFibrinSpeed);
+
+    sliderFibrinSpeed = createSlider(0, 12, 3, 1);
+    sliderFibrinSpeed.addClass("simulation-slider");
+    sliderFibrinSpeed.parent(groupFibrinSpeed);
+
+    valueFibrinSpeed = createDiv("Valor actual: 3 conexiones / 4 fotogramas");
+    valueFibrinSpeed.addClass("slider-value");
+    valueFibrinSpeed.parent(groupFibrinSpeed);
 }
 
 function resetSimulation() {
@@ -164,4 +212,6 @@ function resetSimulation() {
 
     skin.plateletsToClose = plateletsToClose;
     skin.plateletAdhesion = plateletAdhesion / 100;
+    skin.plateletAttraction = sliderPlateletAttraction.value() / 100;
+    skin.fibrinSpringsPerStep = sliderFibrinSpeed.value();
 }

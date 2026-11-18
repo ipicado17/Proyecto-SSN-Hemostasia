@@ -18,10 +18,14 @@ class Skin {
         this.transformedCells = [];
         this.generate();
         this.change = false;
-        this.plateletsToClose = 25; // Variable cambiable por slide
-        this.plateletAdhesion = 1.0;
         this.woundReady = false;
         this.fibrin = null;
+
+        // Variables para sliders
+        this.plateletsToClose = 25; // Variable cambiable por slide
+        this.plateletAdhesion = 1.0;
+        this.plateletAttraction = 1.0;
+        this.fibrinSpringsStep = 3;
     }
 
     createWound(x) {
@@ -277,7 +281,8 @@ class Skin {
                 }
                 c.applyDrag(this.dragCoefficient);
                 if (!this.wound.closed && this.attractor !== null && c.state !== 2) {
-                    this.attractor.attract(c);
+                    let intensity = c instanceof Platelet ? this.plateletAttraction : 1;
+                    this.attractor.attract(c, intensity);
                 }
             }
             c.update();
@@ -303,6 +308,7 @@ class Skin {
         }
 
         if (this.fibrin) {
+            this.fibrin.springsPerStep = this.fibrinSpringsStep
             this.fibrin.update();
         }
 

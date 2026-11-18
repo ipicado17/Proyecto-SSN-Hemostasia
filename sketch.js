@@ -20,7 +20,7 @@ let plateletsPerSpawn = 1;
 let sliderPlateletsToClose;
 let labelPlateletsToClose;
 let valuePlateletsToClose;
-let plateletsToClose = 25;
+let plateletsToClose = 20;
 
 let sliderPlateletAdhesion;
 let labelPlateletAdhesion;
@@ -39,6 +39,7 @@ function setup() {
     canvas.mousePressed(() => skin.createWound(mouseX));
     createSliders();
     resetSimulation();
+    document.getElementById("reset-button").addEventListener("click", resetSimulation);
 }
 
 function draw() {
@@ -197,7 +198,7 @@ function createSliders() {
     sliderFibrinSpeed.addClass("simulation-slider");
     sliderFibrinSpeed.parent(groupFibrinSpeed);
 
-    valueFibrinSpeed = createDiv("Valor actual: 3 conexiones / 4 fotogramas");
+    valueFibrinSpeed = createDiv("Valor actual: 3 frames");
     valueFibrinSpeed.addClass("slider-value");
     valueFibrinSpeed.parent(groupFibrinSpeed);
 }

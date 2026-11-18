@@ -270,6 +270,10 @@ class Skin {
     }
 
     update() {
+        let adheredPlatelets = this.transformedCells.filter(c => c.state === 1).length;
+        const redBloodCellAttraction = Math.max(0, 1 - adheredPlatelets / this.plateletsToClose);
+        console.log(redBloodCellAttraction);
+
         for (let c of this.cells) {
 
             if (!c.isDead() && !c.isOutsideVessel()) {
@@ -281,7 +285,11 @@ class Skin {
                 }
                 c.applyDrag(this.dragCoefficient);
                 if (!this.wound.closed && this.attractor !== null && c.state !== 2) {
-                    let intensity = c instanceof Platelet ? this.plateletAttraction : 1;
+                    let intensity = c instanceof Platelet
+                        ? this.plateletAttraction
+                        : c instanceof RedBloodCell
+                            ? redBloodCellAttraction
+                            : 1;
                     this.attractor.attract(c, intensity);
                 }
             }
